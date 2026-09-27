@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/floating_dock_root"
+    android:layout_width="52dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_floating_dock"
+    android:gravity="center_horizontal"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
+
+    <!-- Drag Handle (Area khusus untuk menggeser dock) -->
+    <LinearLayout
+        android:id="@+id/dock_drag_handle"
+        android:layout_width="match_parent"
+        android:layout_height="24dp"
+        android:gravity="center"
+        android:clickable="true"
+        android:focusable="false"
+        android:contentDescription="Drag handle">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="::::"
+            android:textColor="@color/klikin_text_secondary"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="32dp"
+        android:layout_height="1dp"
+        android:background="@color/klikin_stroke_subtle"
+        android:layout_marginBottom="4dp" />
+
+    <!-- Play / Pause Button -->
+    <FrameLayout
+        android:id="@+id/btn_play_pause"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:clickable="true"
+        android:focusable="false"
+        android:foreground="?android:attr/selectableItemBackgroundBorderless">
+
+        <View
+            android:id="@+id/btn_play_pause_bg"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_btn_play" />
+
+        <TextView
+            android:id="@+id/btn_play_pause_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="▶"
+            android:textColor="@color/klikin_text_dark"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <!-- Add Target Button (+) -->
+    <FrameLayout
+        android:id="@+id/btn_add_target"
+        android:layout_width="48dp"
+        android:layout_height="44dp"
+        android:clickable="true"
+        android:focusable="false"
+        android:foreground="?android:attr/selectableItemBackgroundBorderless">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="+"
+            android:textColor="@color/klikin_text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <!-- Remove Target Button (-) -->
+    <FrameLayout
+        android:id="@+id/btn_remove_target"
+        android:layout_width="48dp"
+        android:layout_height="44dp"
+        android:clickable="true"
+        android:focusable="false"
+        android:foreground="?android:attr/selectableItemBackgroundBorderless">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="−"
+            android:textColor="@color/klikin_text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <!-- Quick Settings Button (⚙) -->
+    <FrameLayout
+        android:id="@+id/btn_settings"
+        android:layout_width="48dp"
+        android:layout_height="44dp"
+        android:clickable="true"
+        android:focusable="false"
+        android:foreground="?android:attr/selectableItemBackgroundBorderless">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="⚙"
+            android:textColor="@color/klikin_text_secondary"
+            android:textSize="16sp" />
+    </FrameLayout>
+
+    <!-- Minimize Button (‹) -->
+    <FrameLayout
+        android:id="@+id/btn_minimize"
+        android:layout_width="48dp"
+        android:layout_height="44dp"
+        android:clickable="true"
+        android:focusable="false"
+        android:foreground="?android:attr/selectableItemBackgroundBorderless">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="‹"
+            android:textColor="@color/klikin_text_secondary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <View
+        android:layout_width="32dp"
+        android:layout_height="1dp"
+        android:background="@color/klikin_stroke_subtle"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="4dp" />
+
+    <!-- Close Button (✕) -->
+    <FrameLayout
+        android:id="@+id/btn_close"
+        android:layout_width="48dp"
+        android:layout_height="44dp"
+        android:clickable="true"
+        android:focusable="false"
+        android:foreground="?android:attr/selectableItemBackgroundBorderless">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="✕"
+            android:textColor="@color/klikin_crimson_stop"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+</LinearLayout>
