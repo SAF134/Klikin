@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Klikin</string>
+    <string name="accessibility_service_description">Layanan Klikin digunakan untuk mengeksekusi ketukan otomatis secara berulang pada koordinat layar sesuai konfigurasi yang Anda tentukan. Layanan ini tidak membaca teks atau data pribadi layar Anda.</string>
+</resources>
