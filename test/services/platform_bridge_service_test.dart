@@ -23,9 +23,11 @@ void main() {
             return <String, bool>{
               'hasOverlayPermission': true,
               'hasAccessibilityPermission': true,
+              'hasBatteryOptimizationIgnored': true,
             };
           case ChannelConstants.methodRequestOverlayPermission:
           case ChannelConstants.methodRequestAccessibilityPermission:
+          case ChannelConstants.methodRequestBatteryOptimization:
           case ChannelConstants.methodStartOverlay:
           case ChannelConstants.methodStopOverlay:
           case ChannelConstants.methodSyncTargets:
@@ -75,5 +77,11 @@ void main() {
     final status = await bridgeService.getServiceStatus();
     expect(status, 'RUNNING');
     expect(log.single.method, ChannelConstants.methodGetServiceStatus);
+  });
+
+  test('requestBatteryOptimization invokes channel method', () async {
+    final success = await bridgeService.requestBatteryOptimization();
+    expect(success, isTrue);
+    expect(log.single.method, ChannelConstants.methodRequestBatteryOptimization);
   });
 }

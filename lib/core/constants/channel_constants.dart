@@ -6,6 +6,7 @@ class ChannelConstants {
   static const String methodCheckPermissions = 'checkPermissions';
   static const String methodRequestOverlayPermission = 'requestOverlayPermission';
   static const String methodRequestAccessibilityPermission = 'requestAccessibilityPermission';
+  static const String methodRequestBatteryOptimization = 'requestBatteryOptimization';
   static const String methodStartOverlay = 'startOverlay';
   static const String methodStopOverlay = 'stopOverlay';
   static const String methodSyncTargets = 'syncTargets';

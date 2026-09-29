@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <application
         android:label="Klikin"
@@ -33,11 +34,12 @@
             </intent-filter>
         </activity>
 
-        <!-- 1. Accessibility Service Engine: Wajib Dikunci dengan Izin Sistem -->
+        <!-- 1. Accessibility Service Engine: Wajib Dikunci dengan Izin Sistem BIND_ACCESSIBILITY_SERVICE -->
         <service
             android:name=".service.KlikinAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-            android:exported="false">
+            android:exported="true"
+            android:stopWithTask="false">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
@@ -50,6 +52,7 @@
         <service
             android:name=".service.OverlayControllerService"
             android:exported="false"
+            android:stopWithTask="false"
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"

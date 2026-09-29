@@ -18,3 +18,7 @@ class RequestOverlayPermissionEvent extends PermissionEvent {
 class RequestAccessibilityPermissionEvent extends PermissionEvent {
   const RequestAccessibilityPermissionEvent();
 }
+
+class RequestBatteryOptimizationEvent extends PermissionEvent {
+  const RequestBatteryOptimizationEvent();
+}

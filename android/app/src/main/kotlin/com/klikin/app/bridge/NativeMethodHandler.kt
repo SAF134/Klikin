@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.PowerManager
 import android.provider.Settings
 import com.klikin.app.model.NativeLoopConfig
 import com.klikin.app.model.NativeTargetPoint
@@ -23,10 +24,12 @@ class NativeMethodHandler(private val context: Context) : MethodChannel.MethodCa
                     true
                 }
                 val hasAccessibility = isAccessibilityServiceEnabled()
+                val hasBatteryOptimizationIgnored = isBatteryOptimizationIgnored()
                 result.success(
                     mapOf(
                         "hasOverlayPermission" to hasOverlay,
-                        "hasAccessibilityPermission" to hasAccessibility
+                        "hasAccessibilityPermission" to hasAccessibility,
+                        "hasBatteryOptimizationIgnored" to hasBatteryOptimizationIgnored
                     )
                 )
             }
@@ -62,6 +65,32 @@ class NativeMethodHandler(private val context: Context) : MethodChannel.MethodCa
                 }
             }
 
+            "requestBatteryOptimization" -> {
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+                        if (!powerManager.isIgnoringBatteryOptimizations(context.packageName)) {
+                            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                                data = Uri.parse("package:${context.packageName}")
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(intent)
+                        }
+                    }
+                    result.success(true)
+                } catch (e: Exception) {
+                    try {
+                        val fallbackIntent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        context.startActivity(fallbackIntent)
+                        result.success(true)
+                    } catch (ex: Exception) {
+                        result.error("ERR_INTENT_FAILED", "Failed to launch battery optimization settings", ex.message)
+                    }
+                }
+            }
+
             "startOverlay" -> {
                 val hasOverlay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     Settings.canDrawOverlays(context)
@@ -70,6 +99,11 @@ class NativeMethodHandler(private val context: Context) : MethodChannel.MethodCa
                 }
                 if (!hasOverlay) {
                     result.error("ERR_NO_PERMISSION", "Overlay permission not granted", null)
+                    return
+                }
+
+                if (!KlikinAccessibilityService.isConnected) {
+                    result.error("ERR_SERVICE_DEAD", "Accessibility Service is not connected or running", null)
                     return
                 }
 
@@ -152,14 +186,17 @@ class NativeMethodHandler(private val context: Context) : MethodChannel.MethodCa
     }
 
     private fun isAccessibilityServiceEnabled(): Boolean {
-        if (KlikinAccessibilityService.isConnected) return true
+        // Layanan HANYA dianggap aktif jika instance benar-benar hidup dan terikat oleh sistem Android.
+        // Mencegah false-positive saat sakelar di Settings masih ON tetapi service mati di RAM ("Tidak berfungsi").
+        return KlikinAccessibilityService.isConnected
+    }
 
-        val serviceName = "${context.packageName}/${KlikinAccessibilityService::class.java.canonicalName}"
-        val enabledServices = Settings.Secure.getString(
-            context.contentResolver,
-            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-        ) ?: return false
-
-        return enabledServices.contains(serviceName) || enabledServices.contains(context.packageName)
+    private fun isBatteryOptimizationIgnored(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+            powerManager.isIgnoringBatteryOptimizations(context.packageName)
+        } else {
+            true
+        }
     }
 }

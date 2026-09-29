@@ -87,9 +87,10 @@ Komunikasi antara Flutter dan Kotlin dilakukan secara asinkron melalui kontrak t
 
 | Method Name | Input Arguments (Map) | Return Type | Kemungkinan Error Codes | Deskripsi |
 | :--- | :--- | :--- | :--- | :--- |
-| `checkPermissions` | `null` | `Map<String, Boolean>` | - | Mengembalikan status `hasOverlayPermission` dan `hasAccessibilityPermission`. |
+| `checkPermissions` | `null` | `Map<String, Boolean>` | - | Mengembalikan status `hasOverlayPermission`, `hasAccessibilityPermission`, dan `hasBatteryOptimizationIgnored`. |
 | `requestOverlayPermission`| `null` | `Boolean` | `ERR_INTENT_FAILED` | Membuka `ACTION_MANAGE_OVERLAY_PERMISSION`. |
 | `requestAccessibilityPermission`| `null` | `Boolean` | `ERR_INTENT_FAILED` | Membuka `ACTION_ACCESSIBILITY_SETTINGS`. |
+| `requestBatteryOptimization`| `null` | `Boolean` | `ERR_INTENT_FAILED` | Meminta dialog pengabaian optimasi baterai (ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS). |
 | `startOverlay` | `Map<String, dynamic>` (Payload Profil) | `Boolean` | `ERR_NO_PERMISSION`, `ERR_SERVICE_DEAD` | Menampilkan floating dock dan target pins di layar. |
 | `stopOverlay` | `null` | `Boolean` | `ERR_OVERLAY_NOT_ACTIVE`| Menghapus seluruh view dari WindowManager dan shutdown service. |
 | `syncTargets` | `List<Map<String, dynamic>>` | `Boolean` | `ERR_INVALID_COORDS` | Sinkronisasi daftar titik target dari Flutter ke native overlay. |

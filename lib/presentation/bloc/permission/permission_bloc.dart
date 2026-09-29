@@ -12,6 +12,7 @@ class PermissionBloc extends Bloc<PermissionEvent, PermissionState> {
     on<CheckPermissionsEvent>(_onCheckPermissions);
     on<RequestOverlayPermissionEvent>(_onRequestOverlay);
     on<RequestAccessibilityPermissionEvent>(_onRequestAccessibility);
+    on<RequestBatteryOptimizationEvent>(_onRequestBatteryOptimization);
   }
 
   Future<void> _onCheckPermissions(
@@ -23,6 +24,7 @@ class PermissionBloc extends Bloc<PermissionEvent, PermissionState> {
     emit(state.copyWith(
       hasOverlayPermission: status.hasOverlayPermission,
       hasAccessibilityPermission: status.hasAccessibilityPermission,
+      hasBatteryOptimizationIgnored: status.hasBatteryOptimizationIgnored,
       isLoading: false,
     ));
   }
@@ -39,5 +41,12 @@ class PermissionBloc extends Bloc<PermissionEvent, PermissionState> {
     Emitter<PermissionState> emit,
   ) async {
     await _bridgeService.requestAccessibilityPermission();
+  }
+
+  Future<void> _onRequestBatteryOptimization(
+    RequestBatteryOptimizationEvent event,
+    Emitter<PermissionState> emit,
+  ) async {
+    await _bridgeService.requestBatteryOptimization();
   }
 }

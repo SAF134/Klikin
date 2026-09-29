@@ -8,7 +8,11 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
+import android.provider.Settings
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.klikin.app.MainActivity
 import com.klikin.app.bridge.NativeStreamHandler
@@ -88,7 +92,23 @@ class OverlayControllerService : Service() {
     fun toggleExecution() {
         val accService = KlikinAccessibilityService.instance
         if (accService == null) {
-            // Accessibility service belum aktif di Settings
+            Handler(Looper.getMainLooper()).post {
+                Toast.makeText(
+                    this,
+                    "Layanan Aksesibilitas Klikin terputus. Mengarahkan ke Pengaturan...",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+
+            try {
+                val settingsIntent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                startActivity(settingsIntent)
+            } catch (e: Exception) {
+                // Abaikan jika intent gagal
+            }
+
             NativeStreamHandler.emitStateChanged("ERROR", "Accessibility Service not connected")
             return
         }
@@ -124,6 +144,10 @@ class OverlayControllerService : Service() {
                 gestureEngine.start(targets, loopConfig)
                 windowManager.setExecutionState(true)
                 NativeStreamHandler.emitStateChanged("RUNNING", null)
+            } else {
+                Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(this, "Tidak ada titik target pada layar.", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }

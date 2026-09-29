@@ -5,10 +5,12 @@ import 'package:klikin/core/constants/channel_constants.dart';
 class PermissionStatusModel {
   final bool hasOverlayPermission;
   final bool hasAccessibilityPermission;
+  final bool hasBatteryOptimizationIgnored;
 
   const PermissionStatusModel({
     required this.hasOverlayPermission,
     required this.hasAccessibilityPermission,
+    this.hasBatteryOptimizationIgnored = true,
   });
 
   bool get isAllGranted => hasOverlayPermission && hasAccessibilityPermission;
@@ -18,6 +20,8 @@ class PermissionStatusModel {
       hasOverlayPermission: map['hasOverlayPermission'] as bool? ?? false,
       hasAccessibilityPermission:
           map['hasAccessibilityPermission'] as bool? ?? false,
+      hasBatteryOptimizationIgnored:
+          map['hasBatteryOptimizationIgnored'] as bool? ?? true,
     );
   }
 }
@@ -153,6 +157,17 @@ class PlatformBridgeService {
     try {
       final result = await _methodChannel.invokeMethod<bool>(
         ChannelConstants.methodRequestAccessibilityPermission,
+      );
+      return result ?? false;
+    } on PlatformException {
+      return false;
+    }
+  }
+
+  Future<bool> requestBatteryOptimization() async {
+    try {
+      final result = await _methodChannel.invokeMethod<bool>(
+        ChannelConstants.methodRequestBatteryOptimization,
       );
       return result ?? false;
     } on PlatformException {

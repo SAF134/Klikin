@@ -81,7 +81,7 @@ class _PermissionWizardScreenState extends State<PermissionWizardScreen>
                 Text('Izin Sistem Diperlukan', style: AppTypography.titleMd),
                 const SizedBox(height: 8),
                 Text(
-                  'Klikin membutuhkan 2 izin sistem Android agar dapat menampilkan panel kendali melayang dan menginjeksi ketukan presisi.',
+                  'Klikin membutuhkan izin sistem Android agar dapat menampilkan panel kendali melayang, menginjeksi ketukan, dan tetap stabil di latar belakang.',
                   style: AppTypography.bodyMd,
                 ),
                 const SizedBox(height: 24),
@@ -110,10 +110,23 @@ class _PermissionWizardScreenState extends State<PermissionWizardScreen>
                   },
                 ),
 
+                const SizedBox(height: 14),
+
+                // Step 3: Battery Optimization Whitelist
+                _buildPermissionCard(
+                  step: '3',
+                  title: 'Proteksi Latar Belakang (Disarankan)',
+                  description: 'Abaikan optimasi baterai agar layanan tidak dimatikan sistem saat aplikasi ditutup.',
+                  isGranted: state.hasBatteryOptimizationIgnored,
+                  onAction: () {
+                    context.read<PermissionBloc>().add(const RequestBatteryOptimizationEvent());
+                  },
+                ),
+
                 const SizedBox(height: 28),
 
                 PillButton(
-                  text: state.isAllGranted ? 'Semua Izin Aktif' : 'Tutup Panduan',
+                  text: state.isAllGranted ? 'Lanjutkan ke Aplikasi' : 'Tutup Panduan',
                   variant: state.isAllGranted ? PillButtonVariant.primary : PillButtonVariant.secondary,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
