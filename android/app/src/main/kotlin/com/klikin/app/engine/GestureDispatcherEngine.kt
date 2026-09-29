@@ -3,6 +3,7 @@ package com.klikin.app.engine
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.graphics.Path
+import android.graphics.Rect
 import android.util.Log
 import com.klikin.app.model.NativeLoopConfig
 import com.klikin.app.model.NativeTargetPoint
@@ -24,11 +25,19 @@ class GestureDispatcherEngine(
     var isPaused: Boolean = false
         private set
 
+    @Volatile
+    private var currentTargets: List<NativeTargetPoint> = emptyList()
+
     val isExecuting: Boolean
         get() = isRunning && !isPaused
 
     var onStateChanged: ((state: String, message: String?) -> Unit)? = null
     var onProgress: ((currentLoop: Int, totalLoops: Int, targetIndex: Int) -> Unit)? = null
+    var dockBoundsProvider: (() -> Rect?)? = null
+
+    fun updateTargets(targets: List<NativeTargetPoint>) {
+        currentTargets = targets.map { sanitizer.sanitize(it) }
+    }
 
     fun start(targets: List<NativeTargetPoint>, loopConfig: NativeLoopConfig) {
         if (targets.isEmpty()) {
@@ -38,12 +47,12 @@ class GestureDispatcherEngine(
 
         stop() // Cancel any ongoing loop cleanly
 
+        updateTargets(targets)
         isRunning = true
         isPaused = false
         onStateChanged?.invoke("RUNNING", null)
 
         executionJob = scope.launch {
-            val sanitizedTargets = targets.map { sanitizer.sanitize(it) }
             var completedLoops = 0
             val startTimeMs = System.currentTimeMillis()
 
@@ -54,22 +63,38 @@ class GestureDispatcherEngine(
                         continue
                     }
 
-                    for (target in sanitizedTargets) {
+                    val targetsToExecute = currentTargets
+                    for (target in targetsToExecute) {
                         if (!isActive || !isRunning) break
                         while (isPaused && isRunning) {
                             delay(100L)
                         }
+                        if (!isActive || !isRunning) break
 
-                        onProgress?.invoke(completedLoops + 1, loopConfig.maxCount ?: 0, target.index)
+                        // Ambil koordinat target terbaru jika pin digeser saat paused
+                        val activeTarget = currentTargets.find { it.index == target.index } ?: target
 
-                        // Injeksi ketukan via Android AccessibilityService
-                        val success = dispatchTap(target.x.toFloat(), target.y.toFloat(), target.pressDurationMs)
-                        if (!success && isRunning) {
-                            Log.w(TAG, "OS rejected gesture dispatch at (${target.x}, ${target.y})")
+                        onProgress?.invoke(completedLoops + 1, loopConfig.maxCount ?: 0, activeTarget.index)
+
+                        // Verifikasi Safety Exclusion Zone: cegah klik di atas area Floating Dock
+                        val dockBounds = dockBoundsProvider?.invoke()
+                        if (dockBounds != null && CoordinateSanitizer.isOverlappingControlDock(
+                                activeTarget.x.toFloat(),
+                                activeTarget.y.toFloat(),
+                                dockBounds
+                            )
+                        ) {
+                            Log.w(TAG, "Target #${activeTarget.index} at (${activeTarget.x}, ${activeTarget.y}) is inside Floating Dock safety zone. Skipping tap to prevent UI loop.")
+                        } else {
+                            // Injeksi ketukan via Android AccessibilityService
+                            val success = dispatchTap(activeTarget.x.toFloat(), activeTarget.y.toFloat(), activeTarget.pressDurationMs)
+                            if (!success && isRunning) {
+                                Log.w(TAG, "OS rejected gesture dispatch at (${activeTarget.x}, ${activeTarget.y})")
+                            }
                         }
 
                         // Jeda waktu antar ketukan (Wajib minimum 25ms per AGENTS.md)
-                        delay(target.delayAfterMs.coerceAtLeast(25L))
+                        delay(activeTarget.delayAfterMs.coerceAtLeast(25L))
                     }
 
                     completedLoops++

@@ -2,6 +2,7 @@ package com.klikin.app.overlay
 
 import android.content.Context
 import android.graphics.Point
+import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
 import android.view.WindowManager
@@ -38,17 +39,6 @@ class FloatingWindowManager(
                     onPlayPauseToggleListener?.invoke()
                 }
 
-                override fun onAddTarget() {
-                    val screen = sanitizer.getScreenDimensions()
-                    val defaultX = screen.x / 2
-                    val defaultY = screen.y / 2
-                    addTarget(defaultX, defaultY)
-                }
-
-                override fun onRemoveTarget() {
-                    removeLastTarget()
-                }
-
                 override fun onOpenSettings() {
                     onSettingsClickListener?.invoke()
                 }
@@ -69,7 +59,8 @@ class FloatingWindowManager(
 
     fun addTarget(x: Int, y: Int): NativeTargetPoint {
         val nextIndex = targetPins.size + 1
-        val point = NativeTargetPoint(index = nextIndex, x = x, y = y)
+        val rawPoint = NativeTargetPoint(index = nextIndex, x = x, y = y)
+        val point = sanitizer.sanitize(rawPoint)
 
         mainHandler.post {
             val pin = TargetPinView(context, windowManager, point) { updatedPoint ->
@@ -113,9 +104,9 @@ class FloatingWindowManager(
             }
             targetPins.clear()
 
-            // Add new pins
-            newTargets.forEach { target ->
-                val pin = TargetPinView(context, windowManager, target) {
+            // Add new pins (Sanitasi batas koordinat & waktu sebelum attach ke WindowManager)
+            newTargets.map { sanitizer.sanitize(it) }.forEach { sanitizedTarget ->
+                val pin = TargetPinView(context, windowManager, sanitizedTarget) {
                     notifyTargetsChanged()
                 }
                 try {
@@ -127,6 +118,20 @@ class FloatingWindowManager(
             }
             notifyTargetsChanged()
         }
+    }
+
+    fun getDockBounds(): Rect? {
+        val dock = dockView ?: return null
+        val targetView = if (dock.isMinimized) dock.minimizedView else dock.expandedView
+        if (!targetView.isAttachedToWindow) return null
+        val loc = IntArray(2)
+        targetView.getLocationOnScreen(loc)
+        val density = context.resources.displayMetrics.density
+        val defaultWidth = ((if (dock.isMinimized) 56f else 60f) * density).toInt()
+        val defaultHeight = ((if (dock.isMinimized) 56f else 260f) * density).toInt()
+        val width = targetView.width.takeIf { it > 0 } ?: defaultWidth
+        val height = targetView.height.takeIf { it > 0 } ?: defaultHeight
+        return Rect(loc[0], loc[1], loc[0] + width, loc[1] + height)
     }
 
     fun setExecutionState(isExecuting: Boolean) {

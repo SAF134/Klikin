@@ -21,8 +21,6 @@ class FloatingDockView(
 ) {
     interface Listener {
         fun onTogglePlayPause()
-        fun onAddTarget()
-        fun onRemoveTarget()
         fun onOpenSettings()
         fun onClose()
     }
@@ -33,8 +31,6 @@ class FloatingDockView(
     private val btnPlayPause: FrameLayout = expandedView.findViewById(R.id.btn_play_pause)
     private val btnPlayPauseBg: View = expandedView.findViewById(R.id.btn_play_pause_bg)
     private val btnPlayPauseIcon: TextView = expandedView.findViewById(R.id.btn_play_pause_icon)
-    private val btnAddTarget: FrameLayout = expandedView.findViewById(R.id.btn_add_target)
-    private val btnRemoveTarget: FrameLayout = expandedView.findViewById(R.id.btn_remove_target)
     private val btnSettings: FrameLayout = expandedView.findViewById(R.id.btn_settings)
     private val btnMinimize: FrameLayout = expandedView.findViewById(R.id.btn_minimize)
     private val btnClose: FrameLayout = expandedView.findViewById(R.id.btn_close)
@@ -54,12 +50,16 @@ class FloatingDockView(
             @Suppress("DEPRECATION")
             WindowManager.LayoutParams.TYPE_PHONE
         },
-        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
         PixelFormat.TRANSLUCENT
     ).apply {
         gravity = Gravity.TOP or Gravity.START
         x = 24
         y = 300
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
     }
 
     val minimizedParams: WindowManager.LayoutParams = WindowManager.LayoutParams(
@@ -71,12 +71,16 @@ class FloatingDockView(
             @Suppress("DEPRECATION")
             WindowManager.LayoutParams.TYPE_PHONE
         },
-        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
         PixelFormat.TRANSLUCENT
     ).apply {
         gravity = Gravity.TOP or Gravity.START
         x = 16
         y = 300
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
     }
 
     init {
@@ -84,8 +88,6 @@ class FloatingDockView(
         setupDragListener(minimizedView, minimizedParams, minimizedView)
 
         btnPlayPause.setOnClickListener { listener.onTogglePlayPause() }
-        btnAddTarget.setOnClickListener { listener.onAddTarget() }
-        btnRemoveTarget.setOnClickListener { listener.onRemoveTarget() }
         btnSettings.setOnClickListener { listener.onOpenSettings() }
         btnClose.setOnClickListener { listener.onClose() }
 

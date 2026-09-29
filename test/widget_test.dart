@@ -73,8 +73,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Klikin'), findsOneWidget);
-    expect(find.text('MODE OPERASI'), findsOneWidget);
-    expect(find.text('Single-Point'), findsOneWidget);
-    expect(find.text('Multi-Point'), findsOneWidget);
+    expect(find.text('PROFIL AKTIF'), findsOneWidget);
+    expect(find.text('Belum Ada Profil Ketukan'), findsOneWidget);
+    expect(find.text('BUAT PROFIL TERLEBIH DAHULU'), findsOneWidget);
   });
 }

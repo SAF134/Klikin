@@ -12,8 +12,13 @@ import 'package:klikin/presentation/widgets/common/pill_button.dart';
 
 class ProfileDetailScreen extends StatefulWidget {
   final ClickProfile profile;
+  final bool isNew;
 
-  const ProfileDetailScreen({super.key, required this.profile});
+  const ProfileDetailScreen({
+    super.key,
+    required this.profile,
+    this.isNew = false,
+  });
 
   @override
   State<ProfileDetailScreen> createState() => _ProfileDetailScreenState();
@@ -34,8 +39,24 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     _loopType = widget.profile.loopConfig.loopType;
     _loopCount = widget.profile.loopConfig.maxCount ?? 1000;
     _targets = List.from(widget.profile.targets);
-    if (_targets.isEmpty) {
-      _targets.add(const TargetPoint(index: 1, x: 540, y: 1200, delayAfterMs: 500, pressDurationMs: 50));
+
+    // Validasi inisialisasi titik target sesuai mode
+    if (_mode == ProfileMode.singlePoint) {
+      if (_targets.isEmpty) {
+        _targets.add(const TargetPoint(index: 1, x: 540, y: 1200, delayAfterMs: 500, pressDurationMs: 50));
+      } else if (_targets.length > 1) {
+        _targets = [_targets.first.copyWith(index: 1)];
+      }
+    } else {
+      // Multi-point wajib minimal 2 titik
+      if (_targets.isEmpty) {
+        _targets = [
+          const TargetPoint(index: 1, x: 540, y: 1200, delayAfterMs: 500, pressDurationMs: 50),
+          const TargetPoint(index: 2, x: 720, y: 1500, delayAfterMs: 500, pressDurationMs: 50),
+        ];
+      } else if (_targets.length == 1) {
+        _targets.add(const TargetPoint(index: 2, x: 720, y: 1500, delayAfterMs: 500, pressDurationMs: 50));
+      }
     }
   }
 
@@ -45,9 +66,71 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     super.dispose();
   }
 
+  void _onModeChanged(ProfileMode newMode) {
+    if (_mode == newMode) return;
+    setState(() {
+      _mode = newMode;
+      if (_mode == ProfileMode.singlePoint) {
+        // Pindah ke single point: kunci tepat 1 titik
+        if (_targets.length > 1) {
+          _targets = [_targets.first.copyWith(index: 1)];
+        }
+      } else {
+        // Pindah ke multi point: otomatis minimal 2 titik
+        if (_targets.length < 2) {
+          _targets.add(TargetPoint(
+            index: 2,
+            x: 720,
+            y: 1500,
+            delayAfterMs: 500,
+            pressDurationMs: 50,
+          ));
+        }
+      }
+    });
+  }
+
+  void _addTarget() {
+    if (_mode != ProfileMode.multiPoint) return;
+    setState(() {
+      final nextIndex = _targets.length + 1;
+      _targets.add(TargetPoint(
+        index: nextIndex,
+        x: 540,
+        y: (1200 + (nextIndex * 120)).clamp(200, 2200),
+        delayAfterMs: 500,
+        pressDurationMs: 50,
+      ));
+    });
+  }
+
+  void _removeTarget(int index) {
+    // Multi-point tidak boleh kurang dari 2 titik
+    if (_targets.length <= 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Mode Multi-Point membutuhkan minimal 2 titik target.'),
+          backgroundColor: AppColors.safetyAmber,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _targets.removeAt(index);
+      // Re-index remaining targets
+      for (int i = 0; i < _targets.length; i++) {
+        _targets[i] = _targets[i].copyWith(index: i + 1);
+      }
+    });
+  }
+
   void _saveProfile() {
+    final profileName = _nameController.text.trim().isEmpty ? 'Profil Tanpa Nama' : _nameController.text.trim();
+
     final updated = widget.profile.copyWith(
-      name: _nameController.text.trim().isEmpty ? 'Untitled Profile' : _nameController.text.trim(),
+      name: profileName,
       mode: _mode,
       loopConfig: LoopConfig(
         loopType: _loopType,
@@ -61,36 +144,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     Navigator.of(context).pop();
   }
 
-  void _addTarget() {
-    setState(() {
-      final nextIndex = _targets.length + 1;
-      _targets.add(TargetPoint(
-        index: nextIndex,
-        x: 540,
-        y: 1200 + (nextIndex * 100),
-        delayAfterMs: 500,
-        pressDurationMs: 50,
-      ));
-    });
-  }
-
-  void _removeTarget(int index) {
-    if (_targets.length <= 1) return;
-    setState(() {
-      _targets.removeAt(index);
-      // Re-index remaining targets
-      for (int i = 0; i < _targets.length; i++) {
-        _targets[i] = _targets[i].copyWith(index: i + 1);
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgObsidian,
       appBar: AppBar(
-        title: const Text('Edit Konfigurasi Profil'),
+        title: Text(widget.isNew ? 'Buat Profil Baru' : 'Edit Konfigurasi Profil'),
       ),
       body: Column(
         children: [
@@ -105,6 +164,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   controller: _nameController,
                   style: AppTypography.bodyMd.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
                   decoration: InputDecoration(
+                    hintText: 'Contoh: Farming Auto-Battle',
+                    hintStyle: AppTypography.bodyMd.copyWith(color: AppColors.textTertiary),
                     filled: true,
                     fillColor: AppColors.cardBg,
                     border: OutlineInputBorder(
@@ -120,7 +181,32 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
                 const SizedBox(height: 24),
 
-                // 2. Loop Configuration
+                // 2. Mode Selector (Single-Point vs Multi-Point)
+                Text('MODE OPERASI', style: AppTypography.labelSm),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildChoiceChip(
+                        label: 'Single-Point (1 Titik)',
+                        isSelected: _mode == ProfileMode.singlePoint,
+                        onTap: () => _onModeChanged(ProfileMode.singlePoint),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildChoiceChip(
+                        label: 'Multi-Point (Banyak Titik)',
+                        isSelected: _mode == ProfileMode.multiPoint,
+                        onTap: () => _onModeChanged(ProfileMode.multiPoint),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+
+                // 3. Loop Configuration
                 Text('PENGATURAN SIKLUS (LOOP)', style: AppTypography.labelSm),
                 const SizedBox(height: 10),
                 Row(
@@ -178,28 +264,37 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
                 const SizedBox(height: 28),
 
-                // 3. Targets List Section
+                // 4. Targets List Section Header
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('TITIK TARGET (${_targets.length})', style: AppTypography.labelSm),
-                    TextButton.icon(
-                      onPressed: _addTarget,
-                      icon: const Icon(Icons.add, size: 16),
-                      label: const Text('Tambah Titik'),
-                      style: TextButton.styleFrom(foregroundColor: AppColors.electricEmerald),
+                    Text(
+                      _mode == ProfileMode.singlePoint
+                          ? 'TITIK TARGET (1 TITIK)'
+                          : 'TITIK TARGET (${_targets.length}) — MINIMAL 2',
+                      style: AppTypography.labelSm,
                     ),
+                    if (_mode == ProfileMode.multiPoint)
+                      TextButton.icon(
+                        onPressed: _addTarget,
+                        icon: const Icon(Icons.add, size: 16),
+                        label: const Text('Tambah Titik'),
+                        style: TextButton.styleFrom(foregroundColor: AppColors.electricEmerald),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 10),
 
+                // Target Cards with per-target delay and press duration
                 ..._targets.asMap().entries.map((entry) {
                   final idx = entry.key;
                   final target = entry.value;
+                  final canRemove = _mode == ProfileMode.multiPoint && _targets.length > 2;
+
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.only(bottom: 14),
                     child: Container(
-                      padding: const EdgeInsets.all(14),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: AppColors.cardBg,
                         borderRadius: BorderRadius.circular(12),
@@ -214,7 +309,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                               Row(
                                 children: [
                                   CircleAvatar(
-                                    radius: 12,
+                                    radius: 13,
                                     backgroundColor: AppColors.cyanTarget,
                                     child: Text(
                                       '${target.index}',
@@ -225,29 +320,45 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 10),
                                   Text(
-                                    'Koordinat: X=${target.x}, Y=${target.y}',
-                                    style: AppTypography.dataSm,
+                                    'Titik ${target.index}',
+                                    style: AppTypography.bodyMd.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                 ],
                               ),
-                              if (_targets.length > 1)
+                              if (canRemove)
                                 IconButton(
-                                  icon: const Icon(Icons.close, size: 18, color: AppColors.crimsonAlert),
+                                  icon: const Icon(Icons.delete_outline, size: 20, color: AppColors.crimsonAlert),
+                                  tooltip: 'Hapus Titik',
                                   onPressed: () => _removeTarget(idx),
                                 ),
                             ],
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 14),
+                          // Setting 1: Jeda Antar Ketukan (Delay)
                           MillisecondStepper(
-                            label: 'Jeda setelah titik ${target.index}',
+                            label: 'Jeda Setelah Titik ${target.index} (Delay)',
                             valueMs: target.delayAfterMs,
                             minMs: 25,
                             stepMs: 50,
                             onChanged: (newDelay) {
                               setState(() {
                                 _targets[idx] = target.copyWith(delayAfterMs: newDelay);
+                              });
+                            },
+                          ),
+                          const Divider(color: AppColors.strokeSubtle, height: 24),
+                          // Setting 2: Durasi Lama Tekan (Press Duration)
+                          MillisecondStepper(
+                            label: 'Lama Tekan Titik ${target.index} (Touch Down)',
+                            valueMs: target.pressDurationMs,
+                            minMs: 20,
+                            maxMs: 2000,
+                            stepMs: 10,
+                            onChanged: (newDuration) {
+                              setState(() {
+                                _targets[idx] = target.copyWith(pressDurationMs: newDuration);
                               });
                             },
                           ),
@@ -269,7 +380,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             ),
             child: SafeArea(
               child: PillButton(
-                text: 'SIMPAN PERUBAHAN',
+                text: widget.isNew ? 'SIMPAN & AKTIFKAN PROFIL' : 'SIMPAN PERUBAHAN',
                 onPressed: _saveProfile,
               ),
             ),

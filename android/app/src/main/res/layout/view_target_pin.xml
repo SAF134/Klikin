@@ -1,25 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/target_pin_root"
-    android:layout_width="48dp"
-    android:layout_height="48dp"
+    android:layout_width="56dp"
+    android:layout_height="56dp"
     android:clickable="true"
     android:focusable="false">
 
-    <!-- Outer dual-ring circular badge -->
+    <!-- Reticle Crosshair Lines (Garis bidik presisi horizontal & vertikal 56dp) -->
+    <View
+        android:layout_width="56dp"
+        android:layout_height="2dp"
+        android:layout_gravity="center"
+        android:background="#B3000000" />
+
+    <View
+        android:layout_width="2dp"
+        android:layout_height="56dp"
+        android:layout_gravity="center"
+        android:background="#B3000000" />
+
+    <!-- Outer dual-ring circular badge (Diperbesar ke 48dp agar mudah disentuh & presisi) -->
     <FrameLayout
         android:id="@+id/target_pin_badge"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_gravity="center"
         android:background="@drawable/bg_target_pin">
-
-        <!-- Center Crosshair Dot (2dp) -->
-        <View
-            android:layout_width="4dp"
-            android:layout_height="4dp"
-            android:layout_gravity="center"
-            android:background="#80000000" />
 
         <!-- Target Index Number -->
         <TextView
@@ -29,7 +35,7 @@
             android:layout_gravity="center"
             android:text="1"
             android:textColor="#000000"
-            android:textSize="15sp"
+            android:textSize="18sp"
             android:textStyle="bold" />
     </FrameLayout>
 

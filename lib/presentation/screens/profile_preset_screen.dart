@@ -38,10 +38,8 @@ class ProfilePresetScreen extends StatelessWidget {
       updatedAt: DateTime.now(),
     );
 
-    context.read<ProfileBloc>().add(SaveProfileEvent(newProfile));
-
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ProfileDetailScreen(profile: newProfile)),
+      MaterialPageRoute(builder: (_) => ProfileDetailScreen(profile: newProfile, isNew: true)),
     );
   }
 

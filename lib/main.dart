@@ -9,7 +9,7 @@ import 'package:klikin/presentation/bloc/permission/permission_event.dart';
 import 'package:klikin/presentation/bloc/profile/profile_bloc.dart';
 import 'package:klikin/presentation/bloc/profile/profile_event.dart';
 import 'package:klikin/presentation/bloc/service/service_bloc.dart';
-import 'package:klikin/presentation/screens/dashboard_screen.dart';
+import 'package:klikin/presentation/screens/splash_screen.dart';
 import 'package:klikin/services/platform_bridge_service.dart';
 
 void main() async {
@@ -62,7 +62,7 @@ class KlikinApp extends StatelessWidget {
           title: 'Klikin',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.darkTheme,
-          home: const DashboardScreen(),
+          home: const SplashScreen(),
         ),
       ),
     );

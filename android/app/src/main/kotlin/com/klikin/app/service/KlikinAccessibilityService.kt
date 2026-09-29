@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import com.klikin.app.engine.CoordinateSanitizer
@@ -62,7 +63,11 @@ class KlikinAccessibilityService : AccessibilityService() {
                 }
             }
         }
-        registerReceiver(screenOffReceiver, filter)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(screenOffReceiver, filter, RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(screenOffReceiver, filter)
+        }
     }
 
     override fun onDestroy() {

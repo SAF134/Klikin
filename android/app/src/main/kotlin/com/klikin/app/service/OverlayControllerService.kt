@@ -14,6 +14,7 @@ import com.klikin.app.MainActivity
 import com.klikin.app.bridge.NativeStreamHandler
 import com.klikin.app.engine.CoordinateSanitizer
 import com.klikin.app.model.NativeLoopConfig
+import com.klikin.app.model.NativeTargetPoint
 import com.klikin.app.overlay.FloatingWindowManager
 
 class OverlayControllerService : Service() {
@@ -42,6 +43,14 @@ class OverlayControllerService : Service() {
             ACTION_START_OVERLAY -> {
                 startForeground(NOTIFICATION_ID, buildNotification())
                 windowManager.showDock()
+                pendingConfig?.let {
+                    updateLoopConfig(it)
+                    pendingConfig = null
+                }
+                pendingTargets?.let {
+                    windowManager.syncTargets(it)
+                    pendingTargets = null
+                }
                 NativeStreamHandler.emitStateChanged("ARMED", "Overlay dock started")
             }
         }
@@ -49,14 +58,26 @@ class OverlayControllerService : Service() {
     }
 
     private fun setupDockListeners() {
+        KlikinAccessibilityService.instance?.gestureEngine?.dockBoundsProvider = {
+            windowManager.getDockBounds()
+        }
+
         windowManager.onPlayPauseToggleListener = {
             toggleExecution()
         }
 
         windowManager.onTargetsChangedListener = { targets ->
+            KlikinAccessibilityService.instance?.gestureEngine?.updateTargets(targets)
             for (t in targets) {
                 NativeStreamHandler.emitTargetCoordinatesChanged(t.index, t.x, t.y)
             }
+        }
+
+        windowManager.onSettingsClickListener = {
+            val intent = Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            startActivity(intent)
         }
 
         windowManager.onCloseClickListener = {
@@ -73,11 +94,19 @@ class OverlayControllerService : Service() {
         }
 
         val gestureEngine = accService.gestureEngine
+        // Sambungkan penyedia batas bounding box Floating Dock untuk proteksi zona sentuh
+        gestureEngine.dockBoundsProvider = {
+            windowManager.getDockBounds()
+        }
+
         if (gestureEngine.isExecuting) {
             gestureEngine.pause()
             windowManager.setExecutionState(false)
             NativeStreamHandler.emitStateChanged("PAUSED", null)
         } else if (gestureEngine.isPaused) {
+            // Selalu ambil koordinat target terbaru yang mungkin digeser pengguna saat paused
+            val latestTargets = windowManager.getTargets()
+            gestureEngine.updateTargets(latestTargets)
             gestureEngine.resume()
             windowManager.setExecutionState(true)
             NativeStreamHandler.emitStateChanged("RUNNING", null)
@@ -148,7 +177,10 @@ class OverlayControllerService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        KlikinAccessibilityService.instance?.gestureEngine?.stop()
+        KlikinAccessibilityService.instance?.gestureEngine?.let { engine ->
+            engine.stop()
+            engine.dockBoundsProvider = null
+        }
         windowManager.destroy()
         if (instance == this) {
             instance = null
@@ -167,10 +199,49 @@ class OverlayControllerService : Service() {
         var instance: OverlayControllerService? = null
             private set
 
+        @Volatile
+        private var pendingTargets: List<NativeTargetPoint>? = null
+
+        @Volatile
+        private var pendingConfig: NativeLoopConfig? = null
+
         val isRunning: Boolean
             get() = instance != null
 
-        fun start(context: Context) {
+        fun setPendingTargets(targets: List<NativeTargetPoint>?) {
+            pendingTargets = targets
+            instance?.let { service ->
+                targets?.let { service.windowManager.syncTargets(it) }
+                pendingTargets = null
+            }
+        }
+
+        fun setPendingLoopConfig(config: NativeLoopConfig?) {
+            pendingConfig = config
+            instance?.let { service ->
+                config?.let { service.updateLoopConfig(it) }
+                pendingConfig = null
+            }
+        }
+
+        fun start(
+            context: Context,
+            targets: List<NativeTargetPoint>? = null,
+            loopConfig: NativeLoopConfig? = null
+        ) {
+            val service = instance
+            if (service != null) {
+                // Service sudah aktif: perbarui data secara deterministik langsung di main thread
+                loopConfig?.let { service.updateLoopConfig(it) }
+                targets?.let { service.windowManager.syncTargets(it) }
+                service.windowManager.showDock()
+                return
+            }
+
+            // Antrekan data konfigurasi awal agar langsung dikonsumsi di onStartCommand
+            pendingTargets = targets
+            pendingConfig = loopConfig
+
             val intent = Intent(context, OverlayControllerService::class.java).apply {
                 action = ACTION_START_OVERLAY
             }
@@ -182,6 +253,8 @@ class OverlayControllerService : Service() {
         }
 
         fun stop(context: Context) {
+            pendingTargets = null
+            pendingConfig = null
             val intent = Intent(context, OverlayControllerService::class.java).apply {
                 action = ACTION_STOP_SERVICE
             }

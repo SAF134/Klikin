@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/dock_min_root"
-    android:layout_width="48dp"
-    android:layout_height="48dp"
+    android:layout_width="56dp"
+    android:layout_height="56dp"
     android:clickable="true"
     android:focusable="false">
 
     <FrameLayout
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="46dp"
+        android:layout_height="46dp"
         android:layout_gravity="center"
         android:background="@drawable/bg_dock_min">
 
@@ -18,7 +18,7 @@
             android:layout_gravity="center"
             android:text="›"
             android:textColor="@color/klikin_emerald_run"
-            android:textSize="22sp"
+            android:textSize="24sp"
             android:textStyle="bold" />
     </FrameLayout>
 

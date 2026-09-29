@@ -73,28 +73,13 @@ class NativeMethodHandler(private val context: Context) : MethodChannel.MethodCa
                     return
                 }
 
-                OverlayControllerService.start(context)
-
                 val targetsRaw = call.argument<List<Map<String, Any?>>>("targets")
                 val loopConfigRaw = call.argument<Map<String, Any?>>("loopConfig")
 
-                if (targetsRaw != null || loopConfigRaw != null) {
-                    // Update overlay data on main thread
-                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                        val service = OverlayControllerService.instance
-                        if (service != null) {
-                            if (targetsRaw != null) {
-                                val targets = targetsRaw.map { NativeTargetPoint.fromMap(it) }
-                                service.windowManager.syncTargets(targets)
-                            }
-                            if (loopConfigRaw != null) {
-                                val loopConfig = NativeLoopConfig.fromMap(loopConfigRaw)
-                                service.updateLoopConfig(loopConfig)
-                            }
-                        }
-                    }, 250)
-                }
+                val targets = targetsRaw?.map { NativeTargetPoint.fromMap(it) }
+                val loopConfig = loopConfigRaw?.let { NativeLoopConfig.fromMap(it) }
 
+                OverlayControllerService.start(context, targets, loopConfig)
                 result.success(true)
             }
 
@@ -107,7 +92,7 @@ class NativeMethodHandler(private val context: Context) : MethodChannel.MethodCa
                 val targetsRaw = call.arguments as? List<Map<String, Any?>>
                 if (targetsRaw != null) {
                     val targets = targetsRaw.map { NativeTargetPoint.fromMap(it) }
-                    OverlayControllerService.instance?.windowManager?.syncTargets(targets)
+                    OverlayControllerService.setPendingTargets(targets)
                     result.success(true)
                 } else {
                     result.error("ERR_INVALID_COORDS", "Invalid targets payload", null)
@@ -118,7 +103,7 @@ class NativeMethodHandler(private val context: Context) : MethodChannel.MethodCa
                 val configRaw = call.arguments as? Map<String, Any?>
                 if (configRaw != null) {
                     val loopConfig = NativeLoopConfig.fromMap(configRaw)
-                    OverlayControllerService.instance?.updateLoopConfig(loopConfig)
+                    OverlayControllerService.setPendingLoopConfig(loopConfig)
                     result.success(true)
                 } else {
                     result.error("ERR_INVALID_CONFIG", "Invalid loop config payload", null)
