@@ -3,14 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:klikin/core/theme/app_colors.dart';
 import 'package:klikin/core/theme/app_typography.dart';
 import 'package:klikin/domain/entities/click_profile.dart';
-import 'package:klikin/domain/entities/loop_config.dart';
-import 'package:klikin/domain/entities/target_point.dart';
 import 'package:klikin/presentation/bloc/profile/profile_bloc.dart';
 import 'package:klikin/presentation/bloc/profile/profile_event.dart';
 import 'package:klikin/presentation/bloc/profile/profile_state.dart';
 import 'package:klikin/presentation/screens/profile_detail_screen.dart';
 import 'package:klikin/presentation/widgets/common/pill_button.dart';
-import 'package:uuid/uuid.dart';
 
 class ProfilePresetScreen extends StatelessWidget {
   const ProfilePresetScreen({super.key});
@@ -26,16 +23,8 @@ class ProfilePresetScreen extends StatelessWidget {
       return;
     }
 
-    final newProfile = ClickProfile(
-      id: const Uuid().v4(),
+    final newProfile = ClickProfile.createDefault(
       name: 'Profil Baru ${state.profiles.length + 1}',
-      mode: ProfileMode.singlePoint,
-      loopConfig: const LoopConfig(loopType: LoopType.infinite),
-      targets: const [
-        TargetPoint(index: 1, x: 540, y: 1200, delayAfterMs: 500, pressDurationMs: 50),
-      ],
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
     );
 
     Navigator.of(context).push(

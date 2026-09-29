@@ -14,7 +14,6 @@ class ServiceBloc extends Bloc<ServiceEvent, ServiceState> {
         super(const ServiceState()) {
     on<StartOverlayEvent>(_onStartOverlay);
     on<StopOverlayEvent>(_onStopOverlay);
-    on<ToggleExecutionEvent>(_onToggleExecution);
     on<NativeEventReceived>(_onNativeEventReceived);
 
     _subscription = _bridgeService.events.listen((event) {
@@ -49,17 +48,6 @@ class ServiceBloc extends Bloc<ServiceEvent, ServiceState> {
       isOverlayActive: false,
       status: 'IDLE',
     ));
-  }
-
-  Future<void> _onToggleExecution(
-    ToggleExecutionEvent event,
-    Emitter<ServiceState> emit,
-  ) async {
-    if (state.isRunning) {
-      await _bridgeService.pauseExecution();
-    } else {
-      await _bridgeService.startExecution();
-    }
   }
 
   void _onNativeEventReceived(

@@ -19,5 +19,4 @@ class ChannelConstants {
   static const String eventTargetCoordinatesChanged = 'TARGET_COORDINATES_CHANGED';
   static const String eventExecutionProgress = 'EXECUTION_PROGRESS';
   static const String eventEmergencyStop = 'EMERGENCY_STOP';
-  static const String eventServiceDisconnected = 'SERVICE_DISCONNECTED';
 }

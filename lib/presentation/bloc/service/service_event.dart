@@ -22,10 +22,6 @@ class StopOverlayEvent extends ServiceEvent {
   const StopOverlayEvent();
 }
 
-class ToggleExecutionEvent extends ServiceEvent {
-  const ToggleExecutionEvent();
-}
-
 class NativeEventReceived extends ServiceEvent {
   final NativeEvent event;
 

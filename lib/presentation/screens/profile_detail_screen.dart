@@ -7,8 +7,9 @@ import 'package:klikin/domain/entities/loop_config.dart';
 import 'package:klikin/domain/entities/target_point.dart';
 import 'package:klikin/presentation/bloc/profile/profile_bloc.dart';
 import 'package:klikin/presentation/bloc/profile/profile_event.dart';
-import 'package:klikin/presentation/widgets/common/millisecond_stepper.dart';
 import 'package:klikin/presentation/widgets/common/pill_button.dart';
+import 'package:klikin/presentation/widgets/profile/loop_config_section.dart';
+import 'package:klikin/presentation/widgets/profile/target_card_item.dart';
 
 class ProfileDetailScreen extends StatefulWidget {
   final ClickProfile profile;
@@ -207,60 +208,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                 const SizedBox(height: 24),
 
                 // 3. Loop Configuration
-                Text('PENGATURAN SIKLUS (LOOP)', style: AppTypography.labelSm),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildChoiceChip(
-                        label: 'Tak Terbatas',
-                        isSelected: _loopType == LoopType.infinite,
-                        onTap: () => setState(() => _loopType = LoopType.infinite),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildChoiceChip(
-                        label: 'Berdasarkan Hitungan',
-                        isSelected: _loopType == LoopType.finiteCount,
-                        onTap: () => setState(() => _loopType = LoopType.finiteCount),
-                      ),
-                    ),
-                  ],
+                LoopConfigSection(
+                  loopType: _loopType,
+                  loopCount: _loopCount,
+                  onLoopTypeChanged: (type) => setState(() => _loopType = type),
+                  onLoopCountChanged: (count) => setState(() => _loopCount = count),
                 ),
-
-                if (_loopType == LoopType.finiteCount) ...[
-                  const SizedBox(height: 14),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.cardBg,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.strokeSubtle),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Jumlah Siklus:', style: AppTypography.bodyMd),
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: _loopCount > 100
-                                  ? () => setState(() => _loopCount -= 100)
-                                  : null,
-                              icon: const Icon(Icons.remove, size: 18),
-                            ),
-                            Text('$_loopCount x', style: AppTypography.dataLg.copyWith(fontSize: 16)),
-                            IconButton(
-                              onPressed: () => setState(() => _loopCount += 100),
-                              icon: const Icon(Icons.add, size: 18),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
 
                 const SizedBox(height: 28),
 
@@ -293,77 +246,20 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 14),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.cardBg,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.strokeSubtle),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 13,
-                                    backgroundColor: AppColors.cyanTarget,
-                                    child: Text(
-                                      '${target.index}',
-                                      style: const TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    'Titik ${target.index}',
-                                    style: AppTypography.bodyMd.copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                              if (canRemove)
-                                IconButton(
-                                  icon: const Icon(Icons.delete_outline, size: 20, color: AppColors.crimsonAlert),
-                                  tooltip: 'Hapus Titik',
-                                  onPressed: () => _removeTarget(idx),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 14),
-                          // Setting 1: Jeda Antar Ketukan (Delay)
-                          MillisecondStepper(
-                            label: 'Jeda Setelah Titik ${target.index} (Delay)',
-                            valueMs: target.delayAfterMs,
-                            minMs: 25,
-                            stepMs: 50,
-                            onChanged: (newDelay) {
-                              setState(() {
-                                _targets[idx] = target.copyWith(delayAfterMs: newDelay);
-                              });
-                            },
-                          ),
-                          const Divider(color: AppColors.strokeSubtle, height: 24),
-                          // Setting 2: Durasi Lama Tekan (Press Duration)
-                          MillisecondStepper(
-                            label: 'Lama Tekan Titik ${target.index} (Touch Down)',
-                            valueMs: target.pressDurationMs,
-                            minMs: 20,
-                            maxMs: 2000,
-                            stepMs: 10,
-                            onChanged: (newDuration) {
-                              setState(() {
-                                _targets[idx] = target.copyWith(pressDurationMs: newDuration);
-                              });
-                            },
-                          ),
-                        ],
-                      ),
+                    child: TargetCardItem(
+                      target: target,
+                      canRemove: canRemove,
+                      onRemove: () => _removeTarget(idx),
+                      onDelayChanged: (newDelay) {
+                        setState(() {
+                          _targets[idx] = target.copyWith(delayAfterMs: newDelay);
+                        });
+                      },
+                      onPressDurationChanged: (newDuration) {
+                        setState(() {
+                          _targets[idx] = target.copyWith(pressDurationMs: newDuration);
+                        });
+                      },
                     ),
                   );
                 }),

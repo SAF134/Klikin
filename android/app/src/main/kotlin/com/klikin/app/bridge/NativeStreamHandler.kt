@@ -54,11 +54,4 @@ object NativeStreamHandler : EventChannel.StreamHandler {
             "reason" to reason
         ))
     }
-
-    fun emitServiceDisconnected(reason: String) {
-        emit(mapOf(
-            "eventType" to "SERVICE_DISCONNECTED",
-            "reason" to reason
-        ))
-    }
 }

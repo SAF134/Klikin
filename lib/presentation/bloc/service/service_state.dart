@@ -20,7 +20,6 @@ class ServiceState extends Equatable {
   });
 
   bool get isRunning => status == 'RUNNING';
-  bool get isPaused => status == 'PAUSED';
 
   ServiceState copyWith({
     String? status,
